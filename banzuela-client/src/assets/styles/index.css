@@ -1,0 +1,12 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    font-family: 'Manrope', sans-serif;
+    @apply bg-zinc-100 text-zinc-900 antialiased;
+  }
+
+  #root {
+    @apply min-h-screen;
+  }
+}
