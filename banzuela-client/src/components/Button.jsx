@@ -15,10 +15,14 @@ const Button = ({
   type = 'button',
   variant = 'secondary',
   className = '',
+  onClick,
+  disabled = false,
+  ...rest
 }) => {
   const classes = [
     'inline-flex items-center justify-center rounded-full border-2 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.24em] transition',
     variantClasses[variant] ?? variantClasses.secondary,
+    disabled ? 'opacity-50 cursor-not-allowed' : '',
     className,
   ]
     .join(' ')
@@ -26,14 +30,20 @@ const Button = ({
 
   if (to) {
     return (
-      <Link to={to} className={classes}>
+      <Link to={to} className={classes} onClick={onClick} {...rest}>
         {children}
       </Link>
     );
   }
 
   return (
-    <button type={type} className={classes}>
+    <button
+      type={type}
+      className={classes}
+      onClick={onClick}
+      disabled={disabled}
+      {...rest}
+    >
       {children}
     </button>
   );
