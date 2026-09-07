@@ -1911,10 +1911,3 @@ http://localhost:5173
 ## Author
 
 Developed as a full-stack Web Programming project using React, Node.js, Express.js, MongoDB, JWT authentication, and role-based access control.
-
-```env
-MONGO_URI=your_mongodb_connection_string
-JWT_SECRET=your_jwt_secret_key
-SALT=10
-PORT=8000
-````
