@@ -1912,15 +1912,9 @@ http://localhost:5173
 
 Developed as a full-stack Web Programming project using React, Node.js, Express.js, MongoDB, JWT authentication, and role-based access control.
 
-````
-
-One important correction before you paste it: **your current backend configuration uses `SECRET_KEY` in the code/config you showed me, not `JWT_SECRET` directly in `config.js`**—your `config.js` reads `process.env.JWT_SECRET`. So your actual `.env` should use:
-
 ```env
 MONGO_URI=your_mongodb_connection_string
 JWT_SECRET=your_jwt_secret_key
 SALT=10
 PORT=8000
 ````
-
-Also, your current actual server route prefixes are `/api/v1/product`, `/api/v1/category`, `/api/cart`, `/api/order`, `/api/review`, and `/api/v1/user`, so I kept those rather than the incorrect `/api/user` from your older README.
