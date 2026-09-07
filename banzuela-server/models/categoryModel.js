@@ -21,7 +21,6 @@ const categorySchema = new mongoose.Schema(
     }
 
 );
-    categorySchema.index({ categoryName: 1 });
     categorySchema.index({ description: 1 });
 
 module.exports = mongoose.model('Category', categorySchema);

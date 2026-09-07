@@ -38,9 +38,9 @@ const container = {
 
 const statCard = {
   height: "100%",
-  border: "2px solid #18181b",
+  border: "2px solid #1e3a8a",
   borderRadius: "24px",
-  backgroundColor: "#f4f4f5",
+  backgroundColor: "#1e3a8a",
   boxShadow: "none",
 };
 
@@ -330,7 +330,7 @@ const DashboardPage = () => {
                 fontWeight: 700,
                 letterSpacing: "0.12em",
                 textTransform: "uppercase",
-                color: "#71717a",
+                color: "#fafafa",
               }}
             >
               {title}
@@ -341,7 +341,7 @@ const DashboardPage = () => {
                 mt: 0.5,
                 fontSize: "1.7rem",
                 fontWeight: 800,
-                color: "#18181b",
+                color: "#facc15",
                 lineHeight: 1.1,
               }}
             >
@@ -353,7 +353,7 @@ const DashboardPage = () => {
                 sx={{
                   mt: 0.5,
                   fontSize: "0.75rem",
-                  color: "#71717a",
+                  color: "#fafafa",
                 }}
               >
                 {subtitle}
@@ -365,7 +365,7 @@ const DashboardPage = () => {
     </Card>
   );
 
- if (
+  if (
     !user ||
     !["admin", "seller"].includes(
       user.role
@@ -611,13 +611,19 @@ const DashboardPage = () => {
                           spacing={1.5}
                           alignItems="center"
                         >
-                          {item.icon}
+                          <Box
+                            sx={{
+                              color: "#facc15",
+                            }}
+                          >
+                            {item.icon}
+                          </Box>
 
                           <Box>
                             <Typography
                               sx={{
                                 fontSize: "0.75rem",
-                                color: "#71717a",
+                                color: "#fafafa",
                               }}
                             >
                               {item.title}
@@ -627,6 +633,7 @@ const DashboardPage = () => {
                               sx={{
                                 fontSize: "1.5rem",
                                 fontWeight: 800,
+                                color: "#facc15",
                               }}
                             >
                               {item.value}
@@ -660,7 +667,7 @@ const DashboardPage = () => {
                     <Box sx={{ p: 3 }}>
                       <Typography
                         sx={{
-                          color: "#71717a",
+                          color: "#fafafa",
                           textAlign: "center",
                         }}
                       >
@@ -687,8 +694,8 @@ const DashboardPage = () => {
                               <Typography
                                 sx={{
                                   fontWeight: 700,
-                                  fontSize:
-                                    "0.85rem",
+                                  fontSize: "0.85rem",
+                                  color: "#facc15",
                                 }}
                               >
                                 #
@@ -700,10 +707,8 @@ const DashboardPage = () => {
                               <Typography
                                 sx={{
                                   mt: 0.3,
-                                  fontSize:
-                                    "0.75rem",
-                                  color:
-                                    "#71717a",
+                                  fontSize: "0.75rem",
+                                  color: "#fafafa",
                                 }}
                               >
                                 {getCustomerName(
@@ -720,8 +725,8 @@ const DashboardPage = () => {
                               <Typography
                                 sx={{
                                   fontWeight: 700,
-                                  fontSize:
-                                    "0.85rem",
+                                  fontSize: "0.85rem",
+                                  color: "#facc15",
                                 }}
                               >
                                 PHP{" "}
@@ -739,10 +744,8 @@ const DashboardPage = () => {
                               <Typography
                                 sx={{
                                   mt: 0.3,
-                                  fontSize:
-                                    "0.72rem",
-                                  color:
-                                    "#71717a",
+                                  fontSize: "0.72rem",
+                                  color: "#fafafa",
                                 }}
                               >
                                 {formatStatus(
@@ -755,9 +758,7 @@ const DashboardPage = () => {
 
                           {index <
                             recentOrders.length -
-                              1 && (
-                            <Divider />
-                          )}
+                              1 && <Divider />}
                         </Box>
                       )
                     )
@@ -808,7 +809,7 @@ const DashboardPage = () => {
                           <Typography
                             sx={{
                               fontSize: "0.75rem",
-                              color: "#71717a",
+                              color: "#fafafa",
                             }}
                           >
                             {item.title}
@@ -819,6 +820,7 @@ const DashboardPage = () => {
                               mt: 0.5,
                               fontSize: "1.7rem",
                               fontWeight: 800,
+                              color: "#facc15",
                             }}
                           >
                             {item.value}

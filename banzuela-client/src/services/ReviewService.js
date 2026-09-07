@@ -31,10 +31,14 @@ export const fetchMyReviews = (userId) => {
   );
 };
 
-export const createReview = (
-  productId,
-  reviewData
-) => {
+export const fetchReviewsByProduct = (productId) => {
+  return REVIEW_API.get(
+    `/product/${productId}`,
+    authHeaders()
+  );
+};
+
+export const createReview = (productId, reviewData) => {
   return REVIEW_API.post(
     `/${productId}`,
     reviewData,
@@ -42,10 +46,7 @@ export const createReview = (
   );
 };
 
-export const updateReview = (
-  reviewId,
-  reviewData
-) => {
+export const updateReview = (reviewId, reviewData) => {
   return REVIEW_API.put(
     `/${reviewId}`,
     reviewData,
@@ -60,19 +61,14 @@ export const deleteReview = (reviewId) => {
   );
 };
 
-export const fetchAllReviews = (
-  params = {}
-) => {
+export const fetchAllReviews = (params = {}) => {
   return REVIEW_API.get("/", {
     params,
     ...authHeaders(),
   });
 };
 
-export const fetchReviewsBySeller = (
-  sellerId,
-  params = {}
-) => {
+export const fetchReviewsBySeller = (sellerId, params = {}) => {
   return REVIEW_API.get(
     `/seller/${sellerId}`,
     {

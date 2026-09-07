@@ -1,300 +1,364 @@
 const Order = require("../models/orderModel");
 const { HttpStatus } = require("../config/constants");
 
-// GET ALL ORDERS
+// Get all orders
 exports.getOrders = async (req, res) => {
-    try {
-        const orders = await Order.find()
-            .populate("user")
-            .populate("items.product")
-            .sort({ orderDate: -1 });
+  try {
+    const orders = await Order.find()
+      .populate("user", "-password")
+      .populate("items.product")
+      .sort({ createdAt: -1 });
 
-        res.status(HttpStatus.OK).json({
-            success: true,
-            orders
-        });
-    } catch (error) {
-        console.error("GET ALL ORDERS ERROR:", error);
+    return res.status(HttpStatus.OK).json({
+      success: true,
+      orders,
+    });
+  } catch (error) {
+    console.error("Get Orders Error:", error);
 
-        res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
-            success: false,
-            message: error.message
-        });
-    }
+    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: "Failed to retrieve orders.",
+      error: error.message,
+    });
+  }
 };
 
-// GET DASHBOARD ORDERS
+// Dashboard orders
 exports.getDashboardOrders = async (req, res) => {
-    try {
-        const { role, sellerId, status } = req.query;
+  try {
+    const { role, sellerId, status } = req.query;
+    const filter = {};
 
-        let filter = {};
-
-        // Seller filtering can be added when Order has seller information
-        if (role === "seller" && sellerId) {
-            // filter.seller = sellerId;
-        }
-
-        if (
-            status &&
-            status !== "all" &&
-            status !== "All"
-        ) {
-            filter.status = status;
-        }
-
-        const orders = await Order.find(filter)
-            .populate("user")
-            .populate("items.product")
-            .sort({ orderDate: -1 });
-
-        const totalOrders = orders.length;
-
-        const pendingOrders = orders.filter(
-            (order) => order.status === "Pending"
-        ).length;
-
-        const processingOrders = orders.filter(
-            (order) => order.status === "Processing"
-        ).length;
-
-        const shippedOrders = orders.filter(
-            (order) => order.status === "Shipped"
-        ).length;
-
-        const deliveredOrders = orders.filter(
-            (order) => order.status === "Delivered"
-        ).length;
-
-        const cancelledOrders = orders.filter(
-            (order) => order.status === "Cancelled"
-        ).length;
-
-        const totalSales = orders
-            .filter((order) => order.status !== "Cancelled")
-            .reduce(
-                (total, order) =>
-                    total + Number(order.totalAmount || 0),
-                0
-            );
-
-        res.status(HttpStatus.OK).json({
-            success: true,
-            orders,
-            summary: {
-                totalOrders,
-                pendingOrders,
-                processingOrders,
-                shippedOrders,
-                deliveredOrders,
-                cancelledOrders,
-                totalSales
-            }
-        });
-    } catch (error) {
-        console.error("GET DASHBOARD ORDERS ERROR:", error);
-
-        res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
-            success: false,
-            message: error.message
-        });
+    if (status) {
+      filter.status = status;
     }
+
+    if (req.user?.role === "seller") {
+      const Product = require("../models/productModel");
+
+      const products = await Product.find({
+        seller: req.user.id,
+      }).select("_id");
+
+      filter["items.product"] = {
+        $in: products.map((p) => p._id),
+      };
+    } else if (role === "seller" && sellerId) {
+      const Product = require("../models/productModel");
+
+      const products = await Product.find({
+        seller: sellerId,
+      }).select("_id");
+
+      filter["items.product"] = {
+        $in: products.map((p) => p._id),
+      };
+    }
+
+    const orders = await Order.find(filter)
+      .populate("user", "-password")
+      .populate("items.product")
+      .sort({ createdAt: -1 });
+
+    return res.status(HttpStatus.OK).json({
+      success: true,
+      orders,
+    });
+  } catch (error) {
+    console.error("Get Dashboard Orders Error:", error);
+
+    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: "Failed to retrieve dashboard orders.",
+      error: error.message,
+    });
+  }
 };
 
-// GET ORDERS BY USER
+// Get user's orders
 exports.getMyOrders = async (req, res) => {
-    try {
-        const { userId } = req.params;
+  try {
+    const { userId } = req.params;
 
-        const orders = await Order.find({
-            user: userId
-        })
-            .populate("items.product")
-            .sort({ orderDate: -1 });
-
-        res.status(HttpStatus.OK).json({
-            success: true,
-            orders
-        });
-    } catch (error) {
-        console.error("GET USER ORDERS ERROR:", error);
-
-        res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
-            success: false,
-            message: error.message
-        });
+    if (
+      req.user?.role !== "admin" &&
+      req.user?.id !== userId
+    ) {
+      return res.status(HttpStatus.FORBIDDEN).json({
+        success: false,
+        message: "You are not allowed to access these orders.",
+      });
     }
+
+    const orders = await Order.find({ user: userId })
+      .populate("user", "-password")
+      .populate("items.product")
+      .sort({ createdAt: -1 });
+
+    return res.status(HttpStatus.OK).json({
+      success: true,
+      orders,
+    });
+  } catch (error) {
+    console.error("Get My Orders Error:", error);
+
+    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: "Failed to retrieve your orders.",
+      error: error.message,
+    });
+  }
 };
 
-// GET ORDER BY ID
+// Get order by ID
 exports.getOrderById = async (req, res) => {
-    try {
-        const order = await Order.findById(req.params.id)
-            .populate("user")
-            .populate("items.product");
+  try {
+    const { id } = req.params;
 
-        if (!order) {
-            return res.status(HttpStatus.NOT_FOUND).json({
-                success: false,
-                message: "Order not found"
-            });
-        }
+    const order = await Order.findById(id)
+      .populate("user", "-password")
+      .populate("items.product");
 
-        res.status(HttpStatus.OK).json({
-            success: true,
-            order
-        });
-    } catch (error) {
-        console.error("GET ORDER BY ID ERROR:", error);
-
-        res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
-            success: false,
-            message: error.message
-        });
+    if (!order) {
+      return res.status(HttpStatus.NOT_FOUND).json({
+        success: false,
+        message: "Order not found.",
+      });
     }
+
+    if (req.user?.role !== "admin") {
+      const orderUserId =
+        order.user?._id?.toString() ||
+        order.user?.toString();
+
+      if (orderUserId !== req.user?.id) {
+        return res.status(HttpStatus.FORBIDDEN).json({
+          success: false,
+          message: "You are not allowed to access this order.",
+        });
+      }
+    }
+
+    return res.status(HttpStatus.OK).json({
+      success: true,
+      order,
+    });
+  } catch (error) {
+    console.error("Get Order By ID Error:", error);
+
+    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: "Failed to retrieve the order.",
+      error: error.message,
+    });
+  }
 };
 
-// CREATE ORDER
+// Create order
 exports.createOrder = async (req, res) => {
-    try {
-        console.log("CREATE ORDER BODY:", req.body);
+  try {
+    const {
+      items,
+      totalAmount,
+      shippingAddress,
+      paymentMethod,
+    } = req.body;
 
-        const {
-            user,
-            items,
-            totalAmount,
-            shippingAddress,
-            paymentMethod
-        } = req.body;
+    const user = req.user?.id;
 
-        if (!user) {
-            return res.status(HttpStatus.BAD_REQUEST).json({
-                success: false,
-                message: "User is required."
-            });
-        }
-
-        if (!items || !Array.isArray(items) || items.length === 0) {
-            return res.status(HttpStatus.BAD_REQUEST).json({
-                success: false,
-                message: "Order must contain at least one item."
-            });
-        }
-
-        if (totalAmount === undefined || totalAmount === null) {
-            return res.status(HttpStatus.BAD_REQUEST).json({
-                success: false,
-                message: "Total amount is required."
-            });
-        }
-
-        if (!shippingAddress) {
-            return res.status(HttpStatus.BAD_REQUEST).json({
-                success: false,
-                message: "Shipping address is required."
-            });
-        }
-
-        if (!paymentMethod) {
-            return res.status(HttpStatus.BAD_REQUEST).json({
-                success: false,
-                message: "Payment method is required."
-            });
-        }
-
-        const order = await Order.create({
-            user,
-            items,
-            totalAmount,
-            shippingAddress,
-            paymentMethod
-        });
-
-        const createdOrder = await Order.findById(order._id)
-            .populate("user")
-            .populate("items.product");
-
-        console.log("ORDER CREATED:", createdOrder._id);
-
-        res.status(HttpStatus.CREATED).json({
-            success: true,
-            message: "Order created successfully",
-            order: createdOrder
-        });
-    } catch (error) {
-        console.error("CREATE ORDER ERROR:", error);
-
-        res.status(HttpStatus.BAD_REQUEST).json({
-            success: false,
-            message: error.message
-        });
+    if (!user) {
+      return res.status(HttpStatus.UNAUTHORIZED).json({
+        success: false,
+        message: "Authentication required.",
+      });
     }
+
+    if (!Array.isArray(items) || items.length === 0) {
+      return res.status(HttpStatus.BAD_REQUEST).json({
+        success: false,
+        message: "Order must contain at least one item.",
+      });
+    }
+
+    if (totalAmount === undefined || totalAmount === null) {
+      return res.status(HttpStatus.BAD_REQUEST).json({
+        success: false,
+        message: "Total amount is required.",
+      });
+    }
+
+    if (!shippingAddress?.trim()) {
+      return res.status(HttpStatus.BAD_REQUEST).json({
+        success: false,
+        message: "Shipping address is required.",
+      });
+    }
+
+    if (!paymentMethod?.trim()) {
+      return res.status(HttpStatus.BAD_REQUEST).json({
+        success: false,
+        message: "Payment method is required.",
+      });
+    }
+
+    const order = new Order({
+      user,
+      items,
+      totalAmount,
+      shippingAddress,
+      paymentMethod,
+      status: "Pending",
+    });
+
+    const savedOrder = await order.save();
+
+    const populatedOrder = await Order.findById(
+      savedOrder._id
+    )
+      .populate("user", "-password")
+      .populate("items.product");
+
+    return res.status(HttpStatus.CREATED).json({
+      success: true,
+      message: "Order created successfully.",
+      order: populatedOrder,
+    });
+  } catch (error) {
+    console.error("Create Order Error:", error);
+
+    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: "Failed to create order.",
+      error: error.message,
+    });
+  }
 };
 
-// UPDATE ORDER
+// Update order
 exports.updateOrder = async (req, res) => {
-    try {
-        console.log(
-            "UPDATE ORDER:",
-            req.params.id,
-            req.body
-        );
+  try {
+    const { id } = req.params;
+    const order = await Order.findById(id);
 
-        const order = await Order.findByIdAndUpdate(
-            req.params.id,
-            req.body,
-            {
-                new: true,
-                runValidators: true
-            }
-        )
-            .populate("user")
-            .populate("items.product");
-
-        if (!order) {
-            return res.status(HttpStatus.NOT_FOUND).json({
-                success: false,
-                message: "Order not found"
-            });
-        }
-
-        res.status(HttpStatus.OK).json({
-            success: true,
-            message: "Order updated successfully",
-            order
-        });
-    } catch (error) {
-        console.error("UPDATE ORDER ERROR:", error);
-
-        res.status(HttpStatus.BAD_REQUEST).json({
-            success: false,
-            message: error.message
-        });
+    if (!order) {
+      return res.status(HttpStatus.NOT_FOUND).json({
+        success: false,
+        message: "Order not found.",
+      });
     }
+
+    const allowedFields = [
+      "status",
+      "shippingAddress",
+      "paymentMethod",
+    ];
+
+    allowedFields.forEach((field) => {
+      if (req.body[field] !== undefined) {
+        order[field] = req.body[field];
+      }
+    });
+
+    const updatedOrder = await order.save();
+
+    const populatedOrder = await Order.findById(
+      updatedOrder._id
+    )
+      .populate("user", "-password")
+      .populate("items.product");
+
+    return res.status(HttpStatus.OK).json({
+      success: true,
+      message: "Order updated successfully.",
+      order: populatedOrder,
+    });
+  } catch (error) {
+    console.error("Update Order Error:", error);
+
+    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: "Failed to update order.",
+      error: error.message,
+    });
+  }
 };
 
-// DELETE / CANCEL ORDER
+// Delete order
 exports.deleteOrder = async (req, res) => {
-    try {
-        const order = await Order.findByIdAndDelete(req.params.id);
+  try {
+    const { id } = req.params;
+    const order = await Order.findById(id);
 
-        if (!order) {
-            return res.status(HttpStatus.NOT_FOUND).json({
-                success: false,
-                message: "Order not found"
-            });
-        }
-
-        res.status(HttpStatus.OK).json({
-            success: true,
-            message: "Order cancelled successfully"
-        });
-    } catch (error) {
-        console.error("DELETE ORDER ERROR:", error);
-
-        res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
-            success: false,
-            message: error.message
-        });
+    if (!order) {
+      return res.status(HttpStatus.NOT_FOUND).json({
+        success: false,
+        message: "Order not found.",
+      });
     }
+
+    await Order.findByIdAndDelete(id);
+
+    return res.status(HttpStatus.OK).json({
+      success: true,
+      message: "Order deleted successfully.",
+    });
+  } catch (error) {
+    console.error("Delete Order Error:", error);
+
+    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: "Failed to delete order.",
+      error: error.message,
+    });
+  }
+};
+
+// Cancel order
+exports.cancelOrder = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const order = await Order.findById(id);
+
+    if (!order) {
+      return res.status(HttpStatus.NOT_FOUND).json({
+        success: false,
+        message: "Order not found.",
+      });
+    }
+
+    // Make sure the customer owns this order
+    const orderUserId = order.user?.toString();
+
+    if (orderUserId !== req.user?.id) {
+      return res.status(HttpStatus.FORBIDDEN).json({
+        success: false,
+        message: "You are not allowed to cancel this order.",
+      });
+    }
+
+    // Only pending orders can be cancelled
+    if (order.status?.toLowerCase() !== "pending") {
+      return res.status(HttpStatus.BAD_REQUEST).json({
+        success: false,
+        message: "Only pending orders can be cancelled.",
+      });
+    }
+
+    await Order.findByIdAndDelete(id);
+
+    return res.status(HttpStatus.OK).json({
+      success: true,
+      message: "Order cancelled successfully.",
+    });
+  } catch (error) {
+    console.error("Cancel Order Error:", error);
+
+    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: "Failed to cancel order.",
+      error: error.message,
+    });
+  }
 };

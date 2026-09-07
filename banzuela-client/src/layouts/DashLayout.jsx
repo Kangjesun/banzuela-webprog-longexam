@@ -66,7 +66,7 @@ export default function DashLayout() {
     <Box
       sx={{
         minHeight: "100vh",
-        bgcolor: "#ffd41d",
+        bgcolor: "#facc15",
       }}
     >
       {/* Header */}
@@ -77,8 +77,8 @@ export default function DashLayout() {
           left: 0,
           right: 0,
           zIndex: 1000,
-          borderBottom: "2px solid #000000",
-          bgcolor: "#35408f",
+          borderBottom: "2px solid #ffffff",
+          bgcolor: "#172554",
           backdropFilter: "blur(8px)",
         }}
       >
@@ -119,18 +119,18 @@ export default function DashLayout() {
                 border: "2px solid transparent",
                 transition: "0.2s",
                 "&:hover": {
-                  borderColor: "#ffd41d",
+                  borderColor: "#facc15",
                   bgcolor: "transparent",
                 },
               }}
             >
               {sidebarOpen ? (
                 <MenuOpenIcon
-                  sx={{ color: "#ffd41d" }}
+                  sx={{ color: "#facc15" }}
                 />
               ) : (
                 <MenuIcon
-                  sx={{ color: "#ffd41d" }}
+                  sx={{ color: "#facc15" }}
                 />
               )}
             </IconButton>
@@ -178,17 +178,17 @@ export default function DashLayout() {
               }}
             >
               <PersonIcon
-                sx={{ color: "#ffd41d" }}
+                sx={{ color: "#facc15" }}
               />
 
               <span className="flex flex-col items-start leading-tight">
-                <span className="font-poppins text-[8px] font-medium uppercase tracking-[0.16em] text-[#ffd41d]/75">
+                <span className="font-poppins text-[8px] font-medium uppercase tracking-[0.16em] text-[#facc15]/75">
                   {userRole === "supplier"
                     ? "Seller"
                     : userRole || "User"}
                 </span>
 
-                <span className="font-poppins text-xs font-semibold tracking-normal text-[#ffd41d]">
+                <span className="font-poppins text-xs font-semibold tracking-normal text-[#facc15]">
                   {user?.firstName || "User"}
                 </span>
               </span>
@@ -213,11 +213,11 @@ export default function DashLayout() {
                 fontWeight: 700,
                 letterSpacing: "0.24em",
                 textTransform: "uppercase",
-                color: "#ffd41d",
-                borderColor: "#ffd41d",
+                color: "#facc15",
+                borderColor: "#facc15",
                 "&:hover": {
                   borderColor: "#18181b",
-                  bgcolor: "#ffd41d",
+                  bgcolor: "#facc15",
                   color: "#18181b",
                 },
               }}
@@ -242,8 +242,8 @@ export default function DashLayout() {
             position: "sticky",
             top: "76px",
             height: "calc(100vh - 76px)",
-            borderRight: "2px solid #000000",
-            bgcolor: "#35408f",
+            borderRight: "2px solid #ffffff",
+            bgcolor: "#172554",
             transition: "all 0.3s ease",
             width: sidebarOpen ? 256 : 80,
             px: sidebarOpen ? 2 : 1.5,
@@ -277,14 +277,14 @@ export default function DashLayout() {
                     borderRadius: "999px",
                     border: "2px solid",
                     borderColor: isActive
-                      ? "#18181b"
+                      ? "#ffffff"
                       : "transparent",
                     bgcolor: isActive
-                      ? "#ffd41d"
+                      ? "#facc15"
                       : "transparent",
                     color: isActive
-                      ? "#35408f"
-                      : "#ffd41d",
+                      ? "#172554"
+                      : "#facc15",
                     px: 2,
                     py: 1.5,
                     fontSize: "11px",
@@ -293,9 +293,9 @@ export default function DashLayout() {
                     textTransform: "uppercase",
                     transition: "0.2s",
                     "&:hover": {
-                      borderColor: "#18181b",
-                      bgcolor: "#ffd41d",
-                      color: "#35408f",
+                      borderColor: "#ffffff",
+                      bgcolor: "#facc15",
+                      color: "#172554",
                     },
                   }}
                 >
@@ -331,14 +331,14 @@ export default function DashLayout() {
                         borderRadius: "999px",
                         border: "2px solid",
                         borderColor: isActive
-                          ? "#18181b"
+                          ? "#ffffff"
                           : "transparent",
                         bgcolor: isActive
-                          ? "#ffd41d"
+                          ? "#facc15"
                           : "transparent",
                         color: isActive
-                          ? "#35408f"
-                          : "#ffd41d",
+                          ? "#172554"
+                          : "#facc15",
                         px: 2,
                         py: 1.5,
                         fontSize: "11px",
@@ -348,8 +348,8 @@ export default function DashLayout() {
                         transition: "0.2s",
                         "&:hover": {
                           borderColor: "#18181b",
-                          bgcolor: "#ffd41d",
-                          color: "#35408f",
+                          bgcolor: "#facc15",
+                          color: "#172554",
                         },
                       }}
                     >

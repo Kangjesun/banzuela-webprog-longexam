@@ -10,27 +10,20 @@ const {
   deleteUser,
 } = require("../controllers/userController");
 
-const authMiddleware = require("../middleware/authMiddleware");
+const authentication = require("../middleware/authentication");
+const authorize = require("../middleware/authorization");
 
 const router = express.Router();
 
+// Public
 router.post("/register", createUser);
 router.post("/login", login);
 
-router.get("/", authMiddleware, getUsers);
-router.get("/:id", authMiddleware, getUserById);
-router.put("/:id", authMiddleware, updateUser);
-
-router.put(
-  "/:id/change-password",
-  authMiddleware,
-  changePassword
-);
-
-router.delete(
-  "/:id",
-  authMiddleware,
-  deleteUser
-);
+// Protected
+router.get("/", authentication, authorize("admin"), getUsers);
+router.get("/:id", authentication, authorize("admin"), getUserById);
+router.put("/:id", authentication, updateUser);
+router.put("/:id/change-password", authentication, changePassword);
+router.delete("/:id", authentication, deleteUser);
 
 module.exports = router;

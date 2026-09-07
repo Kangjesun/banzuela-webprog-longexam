@@ -9,6 +9,7 @@ import {
   fetchCart,
   updateCartQuantity,
   removeFromCart,
+  clearCart,
 } from "../../services/CartService";
 
 import { checkoutCart } from "../../services/OrderService";
@@ -41,6 +42,7 @@ const CartPage = () => {
   const [checkoutError, setCheckoutError] = useState("");
   const [checkoutLoading, setCheckoutLoading] = useState(false);
 
+  // Load cart
   const loadCart = async () => {
     if (!userId) {
       setLoading(false);
@@ -97,15 +99,15 @@ const CartPage = () => {
     }
   }, [user?.address]);
 
+  // Update quantity
   const handleQuantityChange = async (
     productId,
     quantity
   ) => {
     const nextQty = Number(quantity);
 
-    if (!nextQty || nextQty < 1) {
-      return;
-    }
+    if (!nextQty || nextQty < 1) return;
+    if (!userId || !productId) return;
 
     try {
       setError("");
@@ -145,7 +147,10 @@ const CartPage = () => {
     }
   };
 
+  // Remove item
   const handleRemove = async (productId) => {
+    if (!userId || !productId) return;
+
     try {
       setError("");
 
@@ -183,9 +188,17 @@ const CartPage = () => {
     }
   };
 
+  // Checkout
   const handleCheckout = async () => {
     if (!userId) {
       setCheckoutError("Please sign in again.");
+      return;
+    }
+
+    if (user?.role !== "customer") {
+      setCheckoutError(
+        "Only customer accounts can checkout."
+      );
       return;
     }
 
@@ -211,11 +224,11 @@ const CartPage = () => {
           const product = item.product;
 
           const productId =
-            product?._id || item.productId;
+            product?._id ||
+            item.productId ||
+            item.product;
 
-          const quantity = Number(
-            item.quantity || 1
-          );
+          const quantity = Number(item.quantity || 1);
 
           const price = Number(
             item.price ??
@@ -248,19 +261,31 @@ const CartPage = () => {
         0
       );
 
-      await checkoutCart(userId, {
+      await checkoutCart({
         items: orderItems,
         totalAmount,
-        shippingAddress: shippingAddress.trim(),
+        shippingAddress:
+          shippingAddress.trim(),
         paymentMethod,
+      });
+
+      try {
+        await clearCart(userId);
+      } catch (clearError) {
+        console.error(
+          "CLEAR CART ERROR:",
+          clearError
+        );
+      }
+
+      setCart({
+        items: [],
+        totalPrice: 0,
       });
 
       navigate("/orders");
     } catch (requestError) {
-      console.error(
-        "CHECKOUT ERROR:",
-        requestError
-      );
+      console.error("CHECKOUT ERROR:", requestError);
 
       setCheckoutError(
         requestError.response?.data?.message ||
@@ -271,6 +296,7 @@ const CartPage = () => {
     }
   };
 
+  // Not logged in
   if (!user) {
     return (
       <div className="flex w-full flex-col gap-6">
@@ -297,6 +323,7 @@ const CartPage = () => {
     );
   }
 
+  // Customer only
   if (user.role !== "customer") {
     return (
       <div className="flex w-full flex-col gap-6">
@@ -307,7 +334,7 @@ const CartPage = () => {
             </p>
 
             <h1 className="text-3xl font-bold text-white">
-              Only buyer accounts can access the cart.
+              Only customer accounts can access the cart.
             </h1>
 
             <Button
@@ -323,6 +350,7 @@ const CartPage = () => {
     );
   }
 
+  // Loading
   if (loading) {
     return (
       <div className="flex w-full items-center justify-center p-12">
@@ -403,22 +431,31 @@ const CartPage = () => {
 
                 const productId =
                   product?._id ||
-                  item.productId;
+                  item.productId ||
+                  item.product;
+
+                const productName =
+                  product?.productName ||
+                  "Unavailable product";
+
+                const productPrice = Number(
+                  item.price ??
+                    product?.price ??
+                    0
+                );
+
+                const productStock =
+                  product?.stock;
 
                 return (
                   <article
-                    key={
-                      productId || index
-                    }
+                    key={productId || index}
                     className="flex flex-col gap-4 rounded-3xl border-2 border-yellow-400 bg-zinc-200 p-4 sm:flex-row"
                   >
                     <div className="h-32 w-full shrink-0 overflow-hidden rounded-2xl border-2 border-yellow-400 bg-zinc-100 sm:w-40">
                       <ProductImage
-                        src={item.product?.image}
-                        alt={
-                          item.product
-                            ?.productName
-                        }
+                        src={product?.image}
+                        alt={productName}
                         width={160}
                         height={128}
                       />
@@ -426,17 +463,11 @@ const CartPage = () => {
 
                     <div className="flex flex-1 flex-col">
                       <h3 className="text-lg font-semibold text-zinc-900">
-                        {product?.productName ||
-                          "Unavailable product"}
+                        {productName}
                       </h3>
 
                       <p className="mt-2 font-bold text-blue-700">
-                        PHP{" "}
-                        {Number(
-                          item.price ??
-                            product?.price ??
-                            0
-                        ).toFixed(2)}
+                        PHP {productPrice.toFixed(2)}
                       </p>
 
                       <div className="mt-auto flex flex-wrap items-center gap-3 pt-4">
@@ -451,10 +482,7 @@ const CartPage = () => {
                           id={`quantity-${productId}`}
                           type="number"
                           min="1"
-                          max={
-                            product?.stock ||
-                            undefined
-                          }
+                          max={productStock || undefined}
                           value={item.quantity}
                           onChange={(event) =>
                             handleQuantityChange(
@@ -468,11 +496,9 @@ const CartPage = () => {
                         <button
                           type="button"
                           onClick={() =>
-                            handleRemove(
-                              productId
-                            )
+                            handleRemove(productId)
                           }
-                          className="rounded-full border-2 bg-blue-900/95 border-yellow-400 px-4 py-2 text-xs font-semibold uppercase  text-zinc-200 transition  hover:text-yellow-400"
+                          className="rounded-full border-2 border-yellow-400 bg-blue-900/95 px-4 py-2 text-xs font-semibold uppercase text-zinc-200 transition hover:text-yellow-400"
                         >
                           Remove
                         </button>
@@ -535,8 +561,7 @@ const CartPage = () => {
                   </div>
                 )}
 
-                {!useNewAddress &&
-                user.address ? (
+                {!useNewAddress && user.address ? (
                   <div className="mt-3 rounded-xl border-2 border-yellow-400 bg-zinc-200 px-4 py-3 text-sm text-zinc-900">
                     {user.address}
                   </div>
@@ -551,7 +576,7 @@ const CartPage = () => {
                     }
                     rows="3"
                     placeholder="Enter your shipping address"
-                    className="mt-3 w-full rounded-xl border-2 border-yellow-400 bg-zinc-200 px-4 py-3 text-white placeholder:text-zinc-900 outline-none focus:border-yellow-300"
+                    className="mt-3 w-full rounded-xl border-2 border-yellow-400 bg-zinc-200 px-4 py-3 text-zinc-900 placeholder:text-zinc-500 outline-none focus:border-yellow-300"
                   />
                 )}
               </div>
@@ -580,8 +605,7 @@ const CartPage = () => {
                         name="paymentMethod"
                         value={method}
                         checked={
-                          paymentMethod ===
-                          method
+                          paymentMethod === method
                         }
                         onChange={(event) =>
                           setPaymentMethod(

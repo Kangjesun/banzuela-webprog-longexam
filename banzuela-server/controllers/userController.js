@@ -4,9 +4,7 @@ const User = require("../models/userModel");
 const { HttpStatus } = require("../config/constants");
 
 const publicUser = (user) => {
-  const data = user.toObject
-    ? user.toObject()
-    : { ...user };
+  const data = user.toObject ? user.toObject() : { ...user };
 
   delete data.password;
   data.id = data._id;
@@ -22,18 +20,16 @@ const createToken = (user) =>
       email: user.email,
     },
     process.env.JWT_SECRET || "your-secret-key",
-    {
-      expiresIn: "7d",
-    }
+    { expiresIn: "1d" }
   );
 
+// Get all users
 exports.getUsers = async (req, res) => {
   try {
     if (req.user?.role !== "admin") {
       return res.status(HttpStatus.FORBIDDEN).json({
         success: false,
-        message:
-          "Only administrators can view all users.",
+        message: "Only administrators can view all users.",
       });
     }
 
@@ -53,11 +49,11 @@ exports.getUsers = async (req, res) => {
   }
 };
 
+// Get user by ID
 exports.getUserById = async (req, res) => {
   try {
-    const user = await User.findById(
-      req.params.id
-    ).select("-password");
+    const user = await User.findById(req.params.id)
+      .select("-password");
 
     if (!user) {
       return res.status(HttpStatus.NOT_FOUND).json({
@@ -78,6 +74,7 @@ exports.getUserById = async (req, res) => {
   }
 };
 
+// Create user
 exports.createUser = async (req, res) => {
   try {
     const {
@@ -94,8 +91,7 @@ exports.createUser = async (req, res) => {
     const cleanFirstName = firstName?.trim();
     const cleanLastName = lastName?.trim();
     const cleanEmail = email?.toLowerCase().trim();
-    const cleanContactNumber =
-      contactNumber?.trim();
+    const cleanContact = contactNumber?.trim();
     const cleanAddress = address?.trim();
 
     if (
@@ -103,7 +99,7 @@ exports.createUser = async (req, res) => {
       !cleanLastName ||
       !cleanEmail ||
       !password ||
-      !cleanContactNumber ||
+      !cleanContact ||
       !cleanAddress
     ) {
       return res.status(HttpStatus.BAD_REQUEST).json({
@@ -116,12 +112,11 @@ exports.createUser = async (req, res) => {
     if (!/\S+@\S+\.\S+/.test(cleanEmail)) {
       return res.status(HttpStatus.BAD_REQUEST).json({
         success: false,
-        message:
-          "Please provide a valid email address.",
+        message: "Please provide a valid email address.",
       });
     }
 
-    if (!/^09[0-9]{9}$/.test(cleanContactNumber)) {
+    if (!/^09[0-9]{9}$/.test(cleanContact)) {
       return res.status(HttpStatus.BAD_REQUEST).json({
         success: false,
         message:
@@ -132,8 +127,7 @@ exports.createUser = async (req, res) => {
     if (password.length < 8) {
       return res.status(HttpStatus.BAD_REQUEST).json({
         success: false,
-        message:
-          "Password must be at least 8 characters.",
+        message: "Password must be at least 8 characters.",
       });
     }
 
@@ -144,20 +138,18 @@ exports.createUser = async (req, res) => {
     if (exists) {
       return res.status(HttpStatus.BAD_REQUEST).json({
         success: false,
-        message:
-          "Email address is already in use.",
+        message: "Email address is already in use.",
       });
     }
 
-    const hashedPassword =
-      await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = await User.create({
       firstName: cleanFirstName,
       lastName: cleanLastName,
       email: cleanEmail,
       password: hashedPassword,
-      contactNumber: cleanContactNumber,
+      contactNumber: cleanContact,
       address: cleanAddress,
       role,
       isActive,
@@ -176,19 +168,16 @@ exports.createUser = async (req, res) => {
   }
 };
 
+// Login
 exports.login = async (req, res) => {
   try {
-    const email = req.body.email
-      ?.toLowerCase()
-      .trim();
-
+    const email = req.body.email?.toLowerCase().trim();
     const password = req.body.password;
 
     if (!email || !password) {
       return res.status(HttpStatus.BAD_REQUEST).json({
         success: false,
-        message:
-          "Email and password are required.",
+        message: "Email and password are required.",
       });
     }
 
@@ -208,11 +197,10 @@ exports.login = async (req, res) => {
       });
     }
 
-    const validPassword =
-      await bcrypt.compare(
-        password,
-        user.password
-      );
+    const validPassword = await bcrypt.compare(
+      password,
+      user.password
+    );
 
     if (!validPassword) {
       return res.status(HttpStatus.UNAUTHORIZED).json({
@@ -221,34 +209,32 @@ exports.login = async (req, res) => {
       });
     }
 
+    const token = createToken(user);
+
     res.status(HttpStatus.OK).json({
       success: true,
-      token: createToken(user),
+      token,
       user: publicUser(user),
     });
   } catch (error) {
-    res.status(
-      HttpStatus.INTERNAL_SERVER_ERROR
-    ).json({
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: error.message,
     });
   }
 };
 
+// Update user
 exports.updateUser = async (req, res) => {
   try {
-    const authenticatedUserId = req.user?.id;
-    const requestedUserId = req.params.id;
+    const userId = req.user?.id;
+    const requestedId = req.params.id;
+    const isAdmin = req.user?.role === "admin";
 
-    if (
-      authenticatedUserId !== requestedUserId &&
-      req.user?.role !== "admin"
-    ) {
+    if (userId !== requestedId && !isAdmin) {
       return res.status(HttpStatus.FORBIDDEN).json({
         success: false,
-        message:
-          "You are not allowed to update this account.",
+        message: "You are not allowed to update this account.",
       });
     }
 
@@ -256,51 +242,40 @@ exports.updateUser = async (req, res) => {
 
     delete update.password;
 
-    if (req.user?.role !== "admin") {
+    if (!isAdmin) {
       delete update.role;
       delete update.isActive;
     }
 
     if (update.email) {
-      update.email = update.email
-        .toLowerCase()
-        .trim();
+      update.email = update.email.toLowerCase().trim();
     }
 
     if (update.firstName) {
-      update.firstName =
-        update.firstName.trim();
+      update.firstName = update.firstName.trim();
     }
 
     if (update.lastName) {
-      update.lastName =
-        update.lastName.trim();
+      update.lastName = update.lastName.trim();
     }
 
     if (update.contactNumber) {
-      update.contactNumber =
-        update.contactNumber.trim();
+      update.contactNumber = update.contactNumber.trim();
     }
 
     if (update.address) {
-      update.address =
-        update.address.trim();
+      update.address = update.address.trim();
     }
 
-    if (update.contactNumber) {
-      if (
-        !/^09[0-9]{9}$/.test(
-          update.contactNumber
-        )
-      ) {
-        return res.status(
-          HttpStatus.BAD_REQUEST
-        ).json({
-          success: false,
-          message:
-            "Please provide a valid Philippine mobile number starting with 09.",
-        });
-      }
+    if (
+      update.contactNumber &&
+      !/^09[0-9]{9}$/.test(update.contactNumber)
+    ) {
+      return res.status(HttpStatus.BAD_REQUEST).json({
+        success: false,
+        message:
+          "Please provide a valid Philippine mobile number starting with 09.",
+      });
     }
 
     if (
@@ -314,32 +289,27 @@ exports.updateUser = async (req, res) => {
     }
 
     if (update.email) {
-      const existingEmail =
-        await User.findOne({
-          email: update.email,
-          _id: { $ne: requestedUserId },
-        });
+      const exists = await User.findOne({
+        email: update.email,
+        _id: { $ne: requestedId },
+      });
 
-      if (existingEmail) {
-        return res.status(
-          HttpStatus.BAD_REQUEST
-        ).json({
+      if (exists) {
+        return res.status(HttpStatus.BAD_REQUEST).json({
           success: false,
-          message:
-            "Email address is already in use.",
+          message: "Email address is already in use.",
         });
       }
     }
 
-    const user =
-      await User.findByIdAndUpdate(
-        requestedUserId,
-        update,
-        {
-          new: true,
-          runValidators: true,
-        }
-      ).select("-password");
+    const user = await User.findByIdAndUpdate(
+      requestedId,
+      update,
+      {
+        new: true,
+        runValidators: true,
+      }
+    ).select("-password");
 
     if (!user) {
       return res.status(HttpStatus.NOT_FOUND).json({
@@ -362,15 +332,14 @@ exports.updateUser = async (req, res) => {
   }
 };
 
+// Change password
 exports.changePassword = async (req, res) => {
   try {
-    const authenticatedUserId = req.user?.id;
-    const requestedUserId = req.params.id;
+    const userId = req.user?.id;
+    const requestedId = req.params.id;
+    const isAdmin = req.user?.role === "admin";
 
-    if (
-      authenticatedUserId !== requestedUserId &&
-      req.user?.role !== "admin"
-    ) {
+    if (userId !== requestedId && !isAdmin) {
       return res.status(HttpStatus.FORBIDDEN).json({
         success: false,
         message:
@@ -378,14 +347,9 @@ exports.changePassword = async (req, res) => {
       });
     }
 
-    const {
-      currentPassword,
-      newPassword,
-    } = req.body;
+    const { currentPassword, newPassword } = req.body;
 
-    const user = await User.findById(
-      requestedUserId
-    );
+    const user = await User.findById(requestedId);
 
     if (!user) {
       return res.status(HttpStatus.NOT_FOUND).json({
@@ -394,24 +358,19 @@ exports.changePassword = async (req, res) => {
       });
     }
 
-    const validPassword =
-      await bcrypt.compare(
-        currentPassword,
-        user.password
-      );
+    const validPassword = await bcrypt.compare(
+      currentPassword,
+      user.password
+    );
 
     if (!validPassword) {
       return res.status(HttpStatus.BAD_REQUEST).json({
         success: false,
-        message:
-          "Current password is incorrect.",
+        message: "Current password is incorrect.",
       });
     }
 
-    if (
-      !newPassword ||
-      newPassword.length < 8
-    ) {
+    if (!newPassword || newPassword.length < 8) {
       return res.status(HttpStatus.BAD_REQUEST).json({
         success: false,
         message:
@@ -419,15 +378,12 @@ exports.changePassword = async (req, res) => {
       });
     }
 
-    user.password =
-      await bcrypt.hash(newPassword, 10);
-
+    user.password = await bcrypt.hash(newPassword, 10);
     await user.save();
 
     res.status(HttpStatus.OK).json({
       success: true,
-      message:
-        "Password changed successfully.",
+      message: "Password changed successfully.",
     });
   } catch (error) {
     res.status(HttpStatus.BAD_REQUEST).json({
@@ -437,23 +393,21 @@ exports.changePassword = async (req, res) => {
   }
 };
 
+// Delete user
 exports.deleteUser = async (req, res) => {
   try {
-    if (
-      req.user?.id !== req.params.id &&
-      req.user?.role !== "admin"
-    ) {
+    const userId = req.user?.id;
+    const requestedId = req.params.id;
+    const isAdmin = req.user?.role === "admin";
+
+    if (userId !== requestedId && !isAdmin) {
       return res.status(HttpStatus.FORBIDDEN).json({
         success: false,
-        message:
-          "You are not allowed to delete this account.",
+        message: "You are not allowed to delete this account.",
       });
     }
 
-    const user =
-      await User.findByIdAndDelete(
-        req.params.id
-      );
+    const user = await User.findByIdAndDelete(requestedId);
 
     if (!user) {
       return res.status(HttpStatus.NOT_FOUND).json({
@@ -467,9 +421,7 @@ exports.deleteUser = async (req, res) => {
       message: "User deleted successfully.",
     });
   } catch (error) {
-    res.status(
-      HttpStatus.INTERNAL_SERVER_ERROR
-    ).json({
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: error.message,
     });

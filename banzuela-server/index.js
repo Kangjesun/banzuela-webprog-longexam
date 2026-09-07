@@ -15,6 +15,16 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// TEST 500 ERROR
+app.get("/api/test-500", (req, res, next) => {
+  console.log("500 TEST ROUTE HIT");
+
+  const error = new Error("Test Internal Server Error");
+  error.status = 500;
+
+  next(error);
+});
+
 // Database
 connectDB();
 
@@ -24,7 +34,7 @@ app.use("/api/v1/category", categoryRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/order", orderRoutes);
 app.use("/api/review", reviewRoutes);
-app.use("/api/user", userRoutes);
+app.use("/api/v1/user", userRoutes);
 
 // Health check
 app.get("/api/health", (req, res) => {
@@ -44,7 +54,7 @@ app.use((req, res) => {
 
 // Error Handling
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+  console.error("SERVER ERROR:", err.stack);
 
   res.status(err.status || 500).json({
     success: false,

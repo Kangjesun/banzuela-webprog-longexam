@@ -1,4 +1,3 @@
-
 import axios from "axios";
 import constants from "../constants";
 
@@ -12,12 +11,19 @@ const authHeaders = () => ({
   },
 });
 
-// GET CART BY USER
+// GET CUSTOMER CART
 export const fetchCart = (userId) =>
-  CART_API.get(`/user/${userId}`, authHeaders());
+  CART_API.get(
+    `/user/${userId}`,
+    authHeaders()
+  );
 
 // ADD PRODUCT TO CART
-export const addToCart = (userId, productId, quantity = 1) =>
+export const addToCart = (
+  userId,
+  productId,
+  quantity = 1
+) =>
   CART_API.post(
     "/",
     {
@@ -52,3 +58,9 @@ export const removeFromCart = (
     authHeaders()
   );
 
+// CLEAR ENTIRE CART
+export const clearCart = (userId) =>
+  CART_API.delete(
+    `/user/${userId}`,
+    authHeaders()
+  );

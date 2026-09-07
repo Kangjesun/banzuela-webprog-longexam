@@ -27,18 +27,6 @@ const userSchema = new mongoose.Schema(
       required: true,
     },
 
-    contactNumber: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-
-    address: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-
     role: {
       type: String,
       enum: ["admin", "seller", "customer"],
@@ -49,12 +37,23 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+
+    contactNumber: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    address: {
+      type: String,
+      required: true,
+      trim: true,
+    }
+
   },
   {
     timestamps: true,
   }
 );
-
-userSchema.index({ email: 1 });
 
 module.exports = mongoose.model("User", userSchema);

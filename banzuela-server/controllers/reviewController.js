@@ -23,6 +23,32 @@ exports.getAllReviews = async (req, res) => {
   }
 };
 
+// GET REVIEWS BY PRODUCT
+exports.getReviewsByProduct = async (req, res) => {
+  try {
+    const { productId } = req.params;
+
+    const reviews = await Review.find({
+      product: productId,
+    })
+      .populate("user")
+      .populate("product")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      reviews,
+    });
+  } catch (error) {
+    console.error("GET REVIEWS BY PRODUCT ERROR:", error);
+
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 // GET REVIEWS BY USER
 exports.getReviewsByUser = async (req, res) => {
   try {

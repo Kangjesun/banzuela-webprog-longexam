@@ -2,7 +2,7 @@ import axios from "axios";
 import constants from "../constants";
 
 const API = axios.create({
-  baseURL: `${constants.HOST}/user`,
+  baseURL: `${constants.HOST}/v1/user`,
 });
 
 const authHeaders = () => {

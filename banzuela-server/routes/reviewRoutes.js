@@ -1,54 +1,74 @@
 const express = require("express");
 
-const authMiddleware = require("../middleware/authMiddleware");
-
 const {
   getAllReviews,
-  getReviewsByUser,
+  getReviewsByProduct,
   getProductsToReview,
+  getReviewsByUser,
+  getReviewsBySeller,
   createReview,
   updateReview,
   deleteReview,
-  getReviewsBySeller,
 } = require("../controllers/reviewController");
+
+const authentication = require("../middleware/authentication");
+const authorize = require("../middleware/authorization");
 
 const router = express.Router();
 
-router.get("/", authMiddleware, getAllReviews);
+// Protected
+router.get(
+  "/",
+  authentication,
+  authorize("admin"),
+  getAllReviews
+);
+
+router.get(
+  "/product/:productId",
+  authentication,
+  getReviewsByProduct
+);
 
 router.get(
   "/to-review/:userId",
-  authMiddleware,
+  authentication,
+  authorize("customer"),
   getProductsToReview
 );
 
 router.get(
   "/user/:userId",
-  authMiddleware,
+  authentication,
+  authorize("customer"),
   getReviewsByUser
 );
 
 router.get(
   "/seller/:sellerId",
-  authMiddleware,
+  authentication,
+  authorize("admin", "seller"),
   getReviewsBySeller
 );
 
 router.post(
   "/:productId",
-  authMiddleware,
+  authentication,
+  authorize("customer"),
   createReview
 );
 
 router.put(
   "/:id",
-  authMiddleware,
+  authentication,
+  authorize("customer"),
   updateReview
 );
 
 router.delete(
   "/:id",
-  authMiddleware,
+  authentication,
+  authorize("customer"),
   deleteReview
 );
 

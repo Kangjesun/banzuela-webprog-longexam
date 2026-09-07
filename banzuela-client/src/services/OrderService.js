@@ -7,101 +7,41 @@ const ORDER_API = axios.create({
 
 const authHeaders = () => {
   const token = localStorage.getItem("token");
-
   return token
-    ? {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
+    ? { headers: { Authorization: `Bearer ${token}` } }
     : {};
 };
 
-// Create order
+// Customer
+export const checkoutCart = (orderDetails) =>
+  ORDER_API.post("/", orderDetails, authHeaders());
 
-export const checkoutCart = (
-  userId,
-  orderDetails
-) => {
-  return ORDER_API.post(
-    "/",
-    {
-      user: userId,
-      ...orderDetails,
-    },
-    authHeaders()
-  );
-};
+export const fetchMyOrders = (userId) =>
+  ORDER_API.get(`/user/${userId}`, authHeaders());
 
-// Get user's orders
+export const fetchOrderById = (orderId) =>
+  ORDER_API.get(`/${orderId}`, authHeaders());
 
-export const fetchMyOrders = (userId) => {
-  return ORDER_API.get(
-    `/user/${userId}`,
-    authHeaders()
-  );
-};
+export const cancelOrder = (orderId) =>
+  ORDER_API.delete(`/${orderId}/cancel`, authHeaders());
 
-// Get all orders
+// Admin
+export const fetchAllOrders = (params = {}) =>
+  ORDER_API.get("/", { params, ...authHeaders() });
 
-export const fetchAllOrders = (
-  params = {}
-) => {
-  return ORDER_API.get("/", {
-    params,
-    ...authHeaders(),
-  });
-};
+export const deleteOrder = (orderId) =>
+  ORDER_API.delete(`/admin/${orderId}`, authHeaders());
 
-// Get order by ID
-
-export const fetchOrderById = (orderId) => {
-  return ORDER_API.get(
-    `/${orderId}`,
-    authHeaders()
-  );
-};
-
-// Dashboard orders
-
-export const fetchDashboardOrders = (
-  role,
-  sellerId,
-  params = {}
-) => {
-  return ORDER_API.get("/", {
+// Admin / Seller
+export const fetchDashboardOrders = (role, sellerId, params = {}) =>
+  ORDER_API.get("/dashboard", {
     params: {
       ...params,
       role,
-      sellerId:
-        role === "seller"
-          ? sellerId
-          : undefined,
+      sellerId: role === "seller" ? sellerId : undefined,
     },
     ...authHeaders(),
   });
-};
 
-// Update order status
-
-export const updateOrderStatus = (
-  orderId,
-  status
-) => {
-  return ORDER_API.put(
-    `/${orderId}`,
-    {
-      status,
-    },
-    authHeaders()
-  );
-};
-
-// Cancel order
-
-export const cancelOrder = (orderId) => {
-  return ORDER_API.delete(
-    `/${orderId}`,
-    authHeaders()
-  );
-};
+export const updateOrderStatus = (orderId, status) =>
+  ORDER_API.put(`/${orderId}`, { status }, authHeaders());
