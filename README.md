@@ -1,10 +1,3 @@
-You're right. The previous version incorrectly used details from a different project. Your README should match **your actual BulldogEx Shop project**, including the actual `banzuela-client` / `banzuela-server` structure, your current JWT/RBAC implementation, Axios services, Mongoose models, and the packages you actually use.
-
-Also, based on your current project, the roles are **`customer`, `seller`, and `admin`**, not only customer/admin.
-
-Here is the corrected **single complete README.md** based on your BulldogEx project:
-
-````markdown
 # BulldogEx Shop
 
 BulldogEx Shop is a full-stack e-commerce web application developed using React, Node.js, Express.js, and MongoDB.
